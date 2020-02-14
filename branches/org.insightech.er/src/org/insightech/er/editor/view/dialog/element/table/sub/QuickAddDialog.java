@@ -93,7 +93,7 @@ public class QuickAddDialog extends AbstractDialog {
 
 			SqlType sqlType = SqlType.valueOf(this.diagram.getDatabase(), type,
 					length, decimal);
-			// 如果没有找到使用 alias 查找
+			// 濡傛灉娌℃湁鎵惧埌浣跨敤 alias 鏌ユ壘
 			if(sqlType == null) {
 				sqlType = SqlType.valueOf(this.diagram.getDatabase(), type);
 			}
