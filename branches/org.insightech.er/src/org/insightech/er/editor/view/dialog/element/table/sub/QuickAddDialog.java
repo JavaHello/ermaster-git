@@ -93,6 +93,10 @@ public class QuickAddDialog extends AbstractDialog {
 
 			SqlType sqlType = SqlType.valueOf(this.diagram.getDatabase(), type,
 					length, decimal);
+			// 如果没有找到使用 alias 查找
+			if(sqlType == null) {
+				sqlType = SqlType.valueOf(this.diagram.getDatabase(), type);
+			}
 
 			TypeData typeData = new TypeData(length, decimal, false, null,
 					false, false, false, null, false);
