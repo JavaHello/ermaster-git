@@ -26,7 +26,7 @@ Bundle-ClassPath: .,
  template/,
  icons/,
  images/
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-LazyStart: true
 Bundle-Vendor: Insightech.org
 Export-Package: org.insightech.er,
