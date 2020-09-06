@@ -2,6 +2,7 @@ package org.insightech.er.editor.view.dialog.element.table.sub;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
@@ -94,8 +95,9 @@ public class QuickAddDialog extends AbstractDialog {
 			SqlType sqlType = SqlType.valueOf(this.diagram.getDatabase(), type,
 					length, decimal);
 			// 如果没有找到使用 alias 查找
-			if(sqlType == null) {
-				sqlType = SqlType.valueOf(this.diagram.getDatabase(), type);
+			if(sqlType == null && type != null) {
+				sqlType = Optional.ofNullable(SqlType.valueOf(this.diagram.getDatabase(), type))
+						.orElse(SqlType.valueOf(this.diagram.getDatabase(), type.toLowerCase()));
 			}
 
 			TypeData typeData = new TypeData(length, decimal, false, null,
