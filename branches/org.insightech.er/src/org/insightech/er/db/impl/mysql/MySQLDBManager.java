@@ -1,6 +1,10 @@
 package org.insightech.er.db.impl.mysql;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -151,5 +155,23 @@ public class MySQLDBManager extends DBManagerBase {
 		}
 
 		return list;
+	}
+	
+	@Override
+	public List<String> getImportSchemaList(Connection con) throws SQLException {
+		List<String> schemaList = new ArrayList<String>();
+
+		DatabaseMetaData metaData = con.getMetaData();
+		try {
+			ResultSet rs = metaData.getCatalogs();
+			while (rs.next()) {
+				schemaList.add(rs.getString(1));
+			}
+
+		} catch (SQLException e) {
+			// when schema is not supported
+		}
+
+		return schemaList;
 	}
 }

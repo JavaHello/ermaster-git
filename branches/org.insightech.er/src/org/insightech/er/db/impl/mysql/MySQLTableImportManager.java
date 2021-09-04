@@ -27,6 +27,39 @@ public class MySQLTableImportManager extends ImportFromDBManagerEclipseBase {
 	public MySQLTableImportManager() {
 		this.tablePropertiesMap = new HashMap<String, MySQLTableProperties>();
 	}
+	
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void cacheTableComment(ProgressMonitor monitor)
+			throws SQLException, InterruptedException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+
+		try {
+			stmt = this.con
+					.prepareStatement("select TABLE_SCHEMA, TABLE_NAME, TABLE_COMMENT from information_schema.TABLES WHERE TABLE_COMMENT IS NOT NULL");
+			rs = stmt.executeQuery();
+
+			while (rs.next()) {
+				String tableName = rs.getString("TABLE_NAME");
+
+				String schema = rs.getString("TABLE_SCHEMA");
+				String comments = rs.getString("TABLE_COMMENT");
+
+				tableName = this.dbSetting.getTableNameWithSchema(tableName,
+						schema);
+
+				this.tableCommentMap.put(tableName, comments);
+			}
+
+		} finally {
+			this.close(rs);
+			this.close(stmt);
+		}
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -105,8 +138,8 @@ public class MySQLTableImportManager extends ImportFromDBManagerEclipseBase {
 		ResultSet rs = null;
 
 		try {
-			ps = con.prepareStatement("SHOW COLUMNS FROM `"
-					+ tableNameWithSchema + "` LIKE ?");
+			ps = con.prepareStatement("SHOW COLUMNS FROM "
+					+ tableNameWithSchema + " LIKE ?");
 
 			ps.setString(1, columnData.columnName);
 			rs = ps.executeQuery();
@@ -173,7 +206,7 @@ public class MySQLTableImportManager extends ImportFromDBManagerEclipseBase {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String sql = "SELECT T.TABLE_NAME, T.TABLE_COLLATION, C.COLUMN_NAME, "
+		String sql = "SELECT T.TABLE_SCHEMA, T.TABLE_NAME, T.TABLE_COLLATION, C.COLUMN_NAME, "
 				+ "C.CHARACTER_SET_NAME, C.COLLATION_NAME, C.COLUMN_TYPE "
 				+ "FROM INFORMATION_SCHEMA.TABLES T, INFORMATION_SCHEMA.COLUMNS C "
 				+ "WHERE T.TABLE_SCHEMA = ? AND T.TABLE_NAME = C.TABLE_NAME";
@@ -194,6 +227,7 @@ public class MySQLTableImportManager extends ImportFromDBManagerEclipseBase {
 						.getString("CHARACTER_SET_NAME"));
 				String collation = Format.null2blank(rs
 						.getString("COLLATION_NAME"));
+				String schema = rs.getString("TABLE_SCHEMA");
 
 				// String type = Format.null2blank(rs.getString("COLUMN_TYPE"));
 
@@ -214,9 +248,11 @@ public class MySQLTableImportManager extends ImportFromDBManagerEclipseBase {
 
 					this.tablePropertiesMap.put(tableName, tableProperties);
 				}
-
+				String tableNameWithSchema = this.dbSetting
+						.getTableNameWithSchema(tableName, schema);
+				
 				Map<String, ColumnData> columnDataMap = this.columnDataCache
-						.get(tableName);
+						.get(tableNameWithSchema);
 				ColumnData columnData = columnDataMap.get(columnName);
 
 				if (columnData != null) {

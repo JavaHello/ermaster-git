@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -278,6 +279,9 @@ public abstract class ImportFromDBManagerBase implements ImportFromDBManager {
 			while (columnSet.next()) {
 				tableName = columnSet.getString("TABLE_NAME");
 				String schema = columnSet.getString("TABLE_SCHEM");
+				if(schema == null) {
+					schema = columnSet.getString("TABLE_CAT");
+				}
 
 				String tableNameWithSchema = this.dbSetting
 						.getTableNameWithSchema(tableName, schema);
@@ -522,9 +526,12 @@ public abstract class ImportFromDBManagerBase implements ImportFromDBManager {
 		tableProperties.setSchema(schema);
 
 		table.setPhysicalName(tableName);
-		table.setLogicalName(this.translationResources.translate(tableName));
-
-		table.setDescription(this.tableCommentMap.get(tableNameWithSchema));
+		
+		if (this.useCommentAsLogicalName) {
+			table.setLogicalName(this.tableCommentMap.get(tableNameWithSchema));
+		} else {
+			table.setDescription(this.tableCommentMap.get(tableNameWithSchema));
+		}
 
 		List<PrimaryKeyData> primaryKeys = this.getPrimaryKeys(table,
 				this.metaData);
@@ -827,7 +834,21 @@ public abstract class ImportFromDBManagerBase implements ImportFromDBManager {
 
 			SqlType sqlType = SqlType.valueOf(this.dbSetting.getDbsystem(),
 					type, size, decimal);
-
+			
+			// 如果没有找到使用 alias 查找
+			if(sqlType == null && type != null) {
+				final String ft = type;
+				sqlType = Optional.ofNullable(SqlType.valueOf(this.dbSetting.getDbsystem(), type))
+						.orElseGet(() -> {
+							String t = ft.toLowerCase();
+							int idx = t.indexOf("(");
+							if(idx > 0) {
+								t = t.substring(0, idx);
+							}
+							return SqlType.valueOf(this.diagram.getDatabase(), t);
+						});
+			}
+			
 			if (sqlType == null || LOG_SQL_TYPE) {
 				logger.info(columnName + ": " + type + ", " + size + ", "
 						+ columnData.decimalDegits);

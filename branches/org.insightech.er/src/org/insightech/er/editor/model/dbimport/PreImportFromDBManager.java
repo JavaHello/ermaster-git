@@ -129,6 +129,9 @@ public abstract class PreImportFromDBManager implements IRunnableWithProgress {
 
 				while (resultSet.next()) {
 					String schema = resultSet.getString("TABLE_SCHEM");
+					if(schema == null) {
+						schema = resultSet.getString("TABLE_CAT");
+					}
 					String name = resultSet.getString("TABLE_NAME");
 
 					if (DBObject.TYPE_TABLE.equals(dbObjectType)) {
